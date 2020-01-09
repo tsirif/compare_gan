@@ -244,7 +244,7 @@ class ImageDatasetV2(object):
         as_dataset_kwargs={"shuffle_files": False})
     ds = self._replace_labels(split, ds)
     ds = ds.map(self._parse_fn)
-    return ds.prefetch(tf.contrib.data.AUTOTUNE)
+    return ds.prefetch(tf.data.experimental.AUTOTUNE)
 
   def _train_filter_fn(self, image, label):
     del image, label
@@ -288,7 +288,7 @@ class ImageDatasetV2(object):
     ds = ds.shuffle(FLAGS.data_shuffle_buffer_size, seed=seed)
     if "batch_size" in params:
       ds = ds.batch(params["batch_size"], drop_remainder=True)
-    return ds.prefetch(tf.contrib.data.AUTOTUNE)
+    return ds.prefetch(tf.data.experimental.AUTOTUNE)
 
   def eval_input_fn(self, params=None, split=None):
     """Input function for reading data.
@@ -315,7 +315,7 @@ class ImageDatasetV2(object):
     # No shuffle.
     if "batch_size" in params:
       ds = ds.batch(params["batch_size"], drop_remainder=True)
-    return ds.prefetch(tf.contrib.data.AUTOTUNE)
+    return ds.prefetch(tf.data.experimental.AUTOTUNE)
 
   # For backwards compatibility ImageDataset.
   def input_fn(self, params, mode=tf.estimator.ModeKeys.TRAIN,

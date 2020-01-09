@@ -67,6 +67,7 @@ class EvalDataSample(object):
   def discard_images(self):
     logging.info("Deleting references to images: %s", self.images.shape)
     del self.images
+    self.images = None
 
   def set_inception_features(self, activations, logits):
     self.activations = activations
@@ -100,7 +101,7 @@ def get_real_images(dataset,
       fewer images.
 
   Returns:
-    4-D NumPy array with images with values in [0, 256].
+    4-D NumPy array with images with values in [-1, 1].
 
   Raises:
     ValueError: If the dataset/split does not of the number of requested number
@@ -121,7 +122,8 @@ def get_real_images(dataset,
       for i in range(num_examples):
         try:
           b = sess.run(next_batch)
-          b *= 255.0
+          b = 2 * b - 1
+          # b *= 255.0
           if is_single_channel:
             b = np.tile(b, [1, 1, 3])
           real_images[i] = b
