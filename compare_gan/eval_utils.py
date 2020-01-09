@@ -89,58 +89,57 @@ def get_real_images(dataset,
                     num_examples,
                     split=None,
                     failure_on_insufficient_examples=True):
-  """Get num_examples images from the given dataset/split.
+    """Get num_examples images from the given dataset/split.
 
-  Args:
+    Args:
     dataset: `ImageDataset` object.
     num_examples: Number of images to read.
     split: Split of the dataset to use. If None will use the default split for
-      eval defined by the dataset.
+        eval defined by the dataset.
     failure_on_insufficient_examples: If True raise an exception if the
-      dataset/split does not images. Otherwise will log to error and return
-      fewer images.
+        dataset/split does not images. Otherwise will log to error and return
+        fewer images.
 
-  Returns:
+    Returns:
     4-D NumPy array with images with values in [-1, 1].
 
-  Raises:
+    Raises:
     ValueError: If the dataset/split does not of the number of requested number
         requested images and `failure_on_insufficient_examples` is True.
-  """
-  logging.info("Start loading real data.")
-  with tf.Graph().as_default():
+    """
+    logging.info("Start loading real data.")
     ds = dataset.eval_input_fn(split=split)
     # Get real images from the dataset. In the case of a 1-channel
     # dataset (like MNIST) convert it to 3 channels.
-    next_batch = ds.make_one_shot_iterator().get_next()[0]
-    shape = [num_examples] + next_batch.shape.as_list()
+    shape = [num_examples] + ds.element_spec[0].shape.as_list()
     is_single_channel = shape[-1] == 1
     if is_single_channel:
-      shape[-1] = 3
+        shape[-1] = 3
     real_images = np.empty(shape, dtype=np.float32)
-    with tf.Session() as sess:
-      for i in range(num_examples):
+
+    for i, (image, label) in enumerate(ds):
+        if i == num_examples:
+            break
+
         try:
-          b = sess.run(next_batch)
-          b = 2 * b - 1
-          # b *= 255.0
-          if is_single_channel:
-            b = np.tile(b, [1, 1, 3])
-          real_images[i] = b
+            image = 2 * image.numpy() - 1
+            if is_single_channel:
+                image = np.tile(image, [1, 1, 3])
+            real_images[i] = image
         except tf.errors.OutOfRangeError:
-          logging.error("Reached the end of dataset. Read: %d samples.", i)
-          break
+            logging.error("Reached the end of dataset. Read: %d samples.", i)
+            break
 
-  if real_images.shape[0] != num_examples:
-    if failure_on_insufficient_examples:
-      raise ValueError("Not enough examples in the dataset %s: %d / %d" %
-                       (dataset, real_images.shape[0], num_examples))
-    else:
-      logging.error("Not enough examples in the dataset %s: %d / %d", dataset,
-                    real_images.shape[0], num_examples)
+    if real_images.shape[0] != num_examples:
+        if failure_on_insufficient_examples:
+            raise ValueError("Not enough examples in the dataset %s: %d / %d" %
+                            (dataset, real_images.shape[0], num_examples))
+        else:
+            logging.error("Not enough examples in the dataset %s: %d / %d", dataset,
+                        real_images.shape[0], num_examples)
 
-  logging.info("Done loading real data.")
-  return real_images
+    logging.info("Done loading real data.")
+    return real_images
 
 
 def sample_fake_dataset(sess, generator, num_batches):
