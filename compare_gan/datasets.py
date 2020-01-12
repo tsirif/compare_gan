@@ -387,9 +387,9 @@ class CelebaDataset(ImageDatasetV2):
   def _parse_fn(self, features):
     """Returns 64x64x3 image and constant label."""
     image = features["image"]
-    image = tf.image.resize_image_with_crop_or_pad(image, 160, 160)
+    image = tf.image.resize_with_crop_or_pad(image, 160, 160)
     # Note: possibly consider using NumPy's imresize(image, (64, 64))
-    image = tf.image.resize_images(image, [64, 64])
+    image = tf.image.resize(image, [64, 64])
     image.set_shape(self.image_shape)
     image = tf.cast(image, tf.float32) / 255.0
     label = tf.constant(0, dtype=tf.int32)
@@ -420,7 +420,7 @@ class LsunBedroomDataset(ImageDatasetV2):
   def _parse_fn(self, features):
     """Returns a 128x128x3 Tensor with constant label 0."""
     image = features["image"]
-    image = tf.image.resize_image_with_crop_or_pad(
+    image = tf.image.resize_with_crop_or_pad(
         image, target_height=128, target_width=128)
     image = tf.cast(image, tf.float32) / 255.0
     label = tf.constant(0, dtype=tf.int32)
@@ -471,7 +471,7 @@ def _transform_imagnet_image(image, target_image_shape, crop_method, seed):
     image = tf.slice(image, begin, [size, size, 3])
   elif crop_method != "none":
     raise ValueError("Unsupported crop method: {}".format(crop_method))
-  image = tf.image.resize_images(
+  image = tf.image.resize(
       image, [target_image_shape[0], target_image_shape[1]])
   image.set_shape(target_image_shape)
   return image
